@@ -55,6 +55,7 @@ type LanguageFeature =
     | InterfacesWithAbstractStaticMembers
     | SelfTypeConstraints
     | MatchNotAllowedForUnionCaseWithNoData
+    | ErrorSealedAndAbstractClassAttributes
 
 /// LanguageVersion management
 type LanguageVersion(versionText) =
@@ -126,6 +127,7 @@ type LanguageVersion(versionText) =
                 // F# preview
                 LanguageFeature.FromEndSlicing, previewVersion
                 LanguageFeature.MatchNotAllowedForUnionCaseWithNoData, previewVersion
+                LanguageFeature.ErrorSealedAndAbstractClassAttributes, previewVersion
             ]
 
     static let defaultLanguageVersion = LanguageVersion("default")
@@ -233,6 +235,7 @@ type LanguageVersion(versionText) =
         | LanguageFeature.InterfacesWithAbstractStaticMembers -> FSComp.SR.featureInterfacesWithAbstractStaticMembers ()
         | LanguageFeature.SelfTypeConstraints -> FSComp.SR.featureSelfTypeConstraints ()
         | LanguageFeature.MatchNotAllowedForUnionCaseWithNoData -> FSComp.SR.featureMatchNotAllowedForUnionCaseWithNoData ()
+        | LanguageFeature.ErrorSealedAndAbstractClassAttributes -> FSComp.SR.featureErrorSealedAndAbstractClassAttributes ()
 
     /// Get a version string associated with the given feature.
     static member GetFeatureVersionString feature =

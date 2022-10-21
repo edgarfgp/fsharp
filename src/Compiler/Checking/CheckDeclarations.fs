@@ -3998,7 +3998,7 @@ module TcDeclarations =
     ///        where simpleRepr can contain inherit type, declared fields and virtual slots.
     /// body = members
     ///        where members contain methods/overrides, also implicit ctor, inheritCall and local definitions.
-    let rec private SplitTyconDefn (SynTypeDefn(typeInfo=synTyconInfo;typeRepr=trepr; members=extraMembers)) =
+    let rec private SplitTyconDefn (cenv: cenv) envInitial (SynTypeDefn(typeInfo=synTyconInfo;typeRepr=trepr; members=extraMembers)) =
         let extraMembers = desugarGetSetMembers extraMembers
         let implements1 = List.choose (function SynMemberDefn.Interface (interfaceType=ty) -> Some(ty, ty.Range) | _ -> None) extraMembers
         match trepr with
@@ -4149,6 +4149,28 @@ module TcDeclarations =
                         memberFlags.MemberKind=SynMemberKind.Constructor 
                     | SynMemberDefn.ImplicitCtor (_, _, SynSimplePats.SimplePats(spats, _), _, _, _) -> isNil spats
                     | _ -> false)
+                
+            if cenv.g.langVersion.SupportsFeature(LanguageFeature.ErrorSealedAndAbstractClassAttributes) then
+                // Check for the Sealed and Abstract Attributes
+                // If they have both attributes at the same time.
+                // Then need to check that only static member are allowed otherwise raise a compiler error
+                // Make sure you use the correct ranges
+                // Bonus point: we can also raise a error if the use a constructor
+                let constructors = cspec |> List.filter(fun memb ->
+                    match memb with
+                    | SynMemberDefn.Member(SynBinding(valData = SynValData(Some memberFlags, _, _)), _) when memberFlags.MemberKind = SynMemberKind.Constructor -> true
+                    | _ -> false)
+                
+                let (SynComponentInfo(Attributes synAttrs, _, _, _, _, _, _, _)) = synTyconInfo
+                let attrs = TcAttributes cenv envInitial AttributeTargets.TyconDecl synAttrs
+                let hasSealedAttribute = HasFSharpAttribute cenv.g cenv.g.attrib_SealedAttribute attrs
+                let hasAbstractAttribute = HasFSharpAttribute cenv.g cenv.g.attrib_AbstractClassAttribute attrs
+                let hasInstanceMembers = members.Length > 0
+                let hasConstructors = constructors.Length > 0
+                
+                if ((hasSealedAttribute && hasAbstractAttribute) || hasInstanceMembers || hasConstructors) then
+                    errorR(Error(FSComp.SR.chkSealedAndAbstractClassOnType (), m))
+                
             let repr = SynTypeDefnSimpleRepr.General(kind, inherits, slotsigs, fields, isConcrete, isIncrClass, implicitCtorSynPats, m)
             let isAtOriginalTyconDefn = not (isAugmentationTyconDefnRepr repr)
             let core = MutRecDefnsPhase1DataForTycon(synTyconInfo, repr, implements2@implements1, preEstablishedHasDefaultCtor, hasSelfReferentialCtor, isAtOriginalTyconDefn)
@@ -4175,7 +4197,7 @@ module TcDeclarations =
 
         // Split the definitions into "core representations" and "members". The code to process core representations
         // is shared between processing of signature files and implementation files.
-        let mutRecDefnsAfterSplit = mutRecDefns |> MutRecShapes.mapTycons SplitTyconDefn
+        let mutRecDefnsAfterSplit = MutRecShapes.mapTycons (SplitTyconDefn cenv envInitial) mutRecDefns
 
         // Create the entities for each module and type definition, and process the core representation of each type definition.
         let tycons, envMutRecPrelim, mutRecDefnsAfterCore = 

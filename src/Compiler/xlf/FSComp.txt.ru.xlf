@@ -52,6 +52,11 @@
         <target state="translated">Использование "incr" из библиотеки F# является нерекомендуемым. См. https://aka.ms/fsharp-refcell-ops. Например, замените "incr cell" на "cell.Value &lt;- cell.Value + 1".</target>
         <note />
       </trans-unit>
+      <trans-unit id="chkSealedAndAbstractClassOnType">
+        <source>if a type uses both [&lt;Sealed&gt;] and [&lt;AbstractClass&gt;] it means it is static. You can only static members.</source>
+        <target state="new">if a type uses both [&lt;Sealed&gt;] and [&lt;AbstractClass&gt;] it means it is static. You can only static members.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="containerDeprecated">
         <source>The 'AssemblyKeyNameAttribute' has been deprecated. Use 'AssemblyKeyFileAttribute' instead.</source>
         <target state="translated">Атрибут "AssemblyKeyNameAttribute" является устаревшим. Используйте вместо него атрибут "AssemblyKeyFileAttribute".</target>
@@ -165,6 +170,11 @@
       <trans-unit id="featureErrorOnDeprecatedRequireQualifiedAccess">
         <source>give error on deprecated access of construct with RequireQualifiedAccess attribute</source>
         <target state="translated">выдать ошибку при устаревшем доступе к конструкции с атрибутом RequireQualifiedAccess</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="featureErrorSealedAndAbstractClassAttributes">
+        <source>Error when using instance members, constructors in type that use [&lt;Sealed&gt;] and [&lt;AbstractClass&gt;] Attributes.</source>
+        <target state="new">Error when using instance members, constructors in type that use [&lt;Sealed&gt;] and [&lt;AbstractClass&gt;] Attributes.</target>
         <note />
       </trans-unit>
       <trans-unit id="featureExpandedMeasurables">

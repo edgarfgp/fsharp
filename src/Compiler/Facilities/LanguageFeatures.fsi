@@ -45,7 +45,7 @@ type LanguageFeature =
     | InterfacesWithAbstractStaticMembers
     | SelfTypeConstraints
     | MatchNotAllowedForUnionCaseWithNoData
-    | ErrorSealedAndAbstractClassAttributes
+    | ErrorOnSealedAndAbstractClass
 
 /// LanguageVersion management
 type LanguageVersion =

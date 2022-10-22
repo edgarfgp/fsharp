@@ -107,7 +107,6 @@ type T(x: int) =
          |> withDiagnostics [
             (Error 3551, Line 3, Col 7, Line 3, Col 15, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No constructor with arguments is allowed")
             (Error 3551, Line 4, Col 5, Line 4, Col 16, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No additional constructor is allowed")
-            (Error 762, Line 4, Col 14, Line 4, Col 16, "Constructors for the type 'T' must directly or indirectly call its implicit object constructor. Use a call to the implicit object constructor instead of a record expression.")
          ]
 
     [<Fact>]

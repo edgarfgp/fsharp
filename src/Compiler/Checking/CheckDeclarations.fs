@@ -3990,37 +3990,6 @@ module TcDeclarations =
              | SynMemberDefn.ValField (range=m) :: _ 
              | SynMemberDefn.NestedType (range=m) :: _ -> errorR(InternalError("CheckMembersForm: List.takeUntil is wrong", m))
              | _ -> ()
-             
-    let private CheckStaticClassForm cspec =
-        for memb in cspec do
-            match memb with
-            | SynMemberDefn.AbstractSlot(_synValSig, _synMemberFlags, m) -> errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "abstract members", m))
-            | SynMemberDefn.Member(SynBinding(valData = SynValData(Some memberFlags, _, _)), m)->
-                match memberFlags.MemberKind with
-                | SynMemberKind.Constructor -> errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "additional constructor", m))
-                | SynMemberKind.Member
-                | SynMemberKind.PropertyGet
-                | SynMemberKind.PropertySet
-                | SynMemberKind.PropertyGetSet ->
-                    // This will also include members overrides
-                    errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "instance members", m))
-                | SynMemberKind.ClassConstructor -> ()
-            | SynMemberDefn.Member(SynBinding(valData = SynValData(None, _, _)), _)-> ()
-            | SynMemberDefn.Interface _ -> ()
-            | SynMemberDefn.GetSetMember _ -> ()
-            | SynMemberDefn.LetBindings _ -> ()
-            | SynMemberDefn.ImplicitCtor(_, _, synSimplePats, _, _, _) ->
-                match synSimplePats with
-                | SynSimplePats.SimplePats(p, m) -> if p.Length > 0 then errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "constructor with arguments", m))
-                | SynSimplePats.Typed _-> ()
-            | SynMemberDefn.AutoProperty _  -> ()
-            | SynMemberDefn.Open _ -> ()
-            | SynMemberDefn.ImplicitInherit _ -> ()
-            | SynMemberDefn.NestedType _ -> ()
-            | SynMemberDefn.ValField(_, m) -> errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "explicit fields", m))  
-            | SynMemberDefn.Inherit _ -> () 
-            
-                     
 
     /// Separates the definition into core (shape) and body.
     ///
@@ -4028,21 +3997,15 @@ module TcDeclarations =
     ///        where simpleRepr can contain inherit type, declared fields and virtual slots.
     /// body = members
     ///        where members contain methods/overrides, also implicit ctor, inheritCall and local definitions.
-    let rec private SplitTyconDefn (cenv: cenv) envInitial (SynTypeDefn(typeInfo=synTyconInfo;typeRepr=trepr; members=extraMembers)) =
+    let rec private SplitTyconDefn (cenv: cenv) envInitial (SynTypeDefn(typeInfo=SynComponentInfo(attributes= Attributes synAttrs) as synTyconInfo; typeRepr=trepr; members=extraMembers)) =
         let extraMembers = desugarGetSetMembers extraMembers
         let implements1 = List.choose (function SynMemberDefn.Interface (interfaceType=ty) -> Some(ty, ty.Range) | _ -> None) extraMembers
+        let attrs = TcAttributes cenv envInitial AttributeTargets.TyconDecl synAttrs
+        let isStaticClass = HasFSharpAttribute cenv.g cenv.g.attrib_SealedAttribute attrs && HasFSharpAttribute cenv.g cenv.g.attrib_AbstractClassAttribute attrs
+        let reportErrorOnStaticClass = isStaticClass && cenv.g.langVersion.SupportsFeature(LanguageFeature.ErrorOnSealedAndAbstractClass)
         match trepr with
         | SynTypeDefnRepr.ObjectModel(kind, cspec, m) ->
             let cspec = desugarGetSetMembers cspec
-
-            if cenv.g.langVersion.SupportsFeature(LanguageFeature.ErrorSealedAndAbstractClassAttributes) then
-                let (SynComponentInfo(Attributes synAttrs, _, _, _, _, _, _, _)) = synTyconInfo
-                let attrs = TcAttributes cenv envInitial AttributeTargets.TyconDecl synAttrs
-                let hasSealedAttribute = HasFSharpAttribute cenv.g cenv.g.attrib_SealedAttribute attrs
-                let hasAbstractAttribute = HasFSharpAttribute cenv.g cenv.g.attrib_AbstractClassAttribute attrs
-                if hasSealedAttribute && hasAbstractAttribute then
-                    CheckStaticClassForm cspec
-
             CheckMembersForm cspec
             let fields = cspec |> List.choose (function SynMemberDefn.ValField (fieldInfo = f) -> Some f | _ -> None)
             let implements2 = cspec |> List.choose (function SynMemberDefn.Interface (interfaceType=ty) -> Some(ty, ty.Range) | _ -> None)
@@ -4053,11 +4016,33 @@ module TcDeclarations =
                     | _ -> None)
             //let nestedTycons = cspec |> List.choose (function SynMemberDefn.NestedType (x, _, _) -> Some x | _ -> None)
             let slotsigs = cspec |> List.choose (function SynMemberDefn.AbstractSlot (x, y, _) -> Some(x, y) | _ -> None)
+            
+            if reportErrorOnStaticClass then
+                for SynValSig(range=m), _ in slotsigs do
+                    errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "abstract members", m))
            
             let members = 
                 let membersIncludingAutoProps = 
                     cspec |> List.filter (fun memb -> 
-                      match memb with 
+                      match memb with
+                      | SynMemberDefn.ImplicitCtor(ctorArgs= SynSimplePats.SimplePats(pats, m)) when  not pats.IsEmpty && reportErrorOnStaticClass ->
+                            errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "constructor with arguments", m)); false
+                      | SynMemberDefn.Member(SynBinding(valData = SynValData(Some memberFlags, _, _)), m)  when memberFlags.MemberKind = SynMemberKind.Constructor && reportErrorOnStaticClass ->
+                          errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "additional constructor", m)); false
+                      | SynMemberDefn.ValField(_, m) when reportErrorOnStaticClass ->  errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "explicit fields", m)) ; false
+                      | SynMemberDefn.Member(SynBinding(valData = SynValData(Some memberFlags, _, _); trivia = trivia), m) when reportErrorOnStaticClass ->
+                            match memberFlags.MemberKind with
+                            | SynMemberKind.Member
+                            | SynMemberKind.PropertyGet
+                            | SynMemberKind.PropertySet
+                            | SynMemberKind.PropertyGetSet ->
+                                match trivia.LeadingKeyword with
+                                | SynLeadingKeyword.Member _
+                                | SynLeadingKeyword.Default _
+                                | SynLeadingKeyword.Override _ ->
+                                    errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "instance members", m)) ; false
+                                | _ -> true
+                            | _ -> true
                       | SynMemberDefn.Interface _
                       | SynMemberDefn.Member _
                       | SynMemberDefn.GetSetMember _

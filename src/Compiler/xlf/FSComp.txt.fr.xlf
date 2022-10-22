@@ -52,9 +52,9 @@
         <target state="translated">L’utilisation de « incr » à partir de la bibliothèque F# est déconseillée. Voir https://aka.ms/fsharp-refcell-ops. Par exemple, veuillez remplacer « incr cell » par « cell.Value &lt;- cell.Value + 1 ».</target>
         <note />
       </trans-unit>
-      <trans-unit id="chkSealedAndAbstractClassOnType">
-        <source>if a type uses both [&lt;Sealed&gt;] and [&lt;AbstractClass&gt;] it means it is static. You can only static members.</source>
-        <target state="new">if a type uses both [&lt;Sealed&gt;] and [&lt;AbstractClass&gt;] it means it is static. You can only static members.</target>
+      <trans-unit id="chkSealedAndAbstractClassNotAllowed">
+        <source>if a type uses both [&lt;Sealed&gt;] and [&lt;AbstractClass&gt;] it means it is static. No {0} is allowed</source>
+        <target state="new">if a type uses both [&lt;Sealed&gt;] and [&lt;AbstractClass&gt;] it means it is static. No {0} is allowed</target>
         <note />
       </trans-unit>
       <trans-unit id="containerDeprecated">

@@ -4020,6 +4020,9 @@ module TcDeclarations =
             if reportErrorOnStaticClass then
                 for SynValSig(range=m), _ in slotsigs do
                     errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "abstract members", m))
+                    
+                for _, m in implements2 do
+                    errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "inplement interfaces on static class is not allowed", m)) ; false
            
             let members = 
                 let membersIncludingAutoProps = 
@@ -4041,14 +4044,19 @@ module TcDeclarations =
                                 | SynLeadingKeyword.Default _
                                 | SynLeadingKeyword.Override _ ->
                                     errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "instance members", m)) ; false
+                                | SynLeadingKeyword.Do _ -> errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "do bindings", m)) ; false
                                 | _ -> true
                             | _ -> true
+                      | SynMemberDefn.LetBindings(_, isStatic, _, m) when not isStatic && reportErrorOnStaticClass ->
+                          errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "only static let bindings", m)) ; false
+                      | SynMemberDefn.AutoProperty(isStatic= isStatic; range = m) when not isStatic && reportErrorOnStaticClass ->
+                          errorR(Error(FSComp.SR.chkSealedAndAbstractClassNotAllowed "only static member val definitions", m)) ; false
                       | SynMemberDefn.Interface _
                       | SynMemberDefn.Member _
                       | SynMemberDefn.GetSetMember _
                       | SynMemberDefn.LetBindings _
                       | SynMemberDefn.ImplicitCtor _
-                      | SynMemberDefn.AutoProperty _ 
+                      | SynMemberDefn.AutoProperty _
                       | SynMemberDefn.Open _
                       | SynMemberDefn.ImplicitInherit _ -> true
                       | SynMemberDefn.NestedType (_, _, m) -> error(Error(FSComp.SR.tcTypesCannotContainNestedTypes(), m)); false

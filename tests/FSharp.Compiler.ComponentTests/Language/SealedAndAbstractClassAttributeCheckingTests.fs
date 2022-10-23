@@ -225,7 +225,7 @@ type B =
          ]
          
     [<Fact>]
-    let ``When Sealed and AbstractClass on a type with primary, additional constructors, explicit field, instance and abstract members lang version70`` () =
+    let ``When Sealed and AbstractClass on a type with additional constructors, explicit field, instance and abstract members lang version70`` () =
         Fsx """
 [<Sealed; AbstractClass>]
 type T =
@@ -248,7 +248,7 @@ type T =
          |> shouldSucceed
          
     [<Fact>]
-    let ``When Sealed and AbstractClass on a type with primary, additional constructors, explicit field, instance and abstract members in lang preview`` () =
+    let ``When Sealed and AbstractClass on a type with additional constructors, explicit field, instance and abstract members in lang preview`` () =
         Fsx """
 [<Sealed; AbstractClass>]
 type T =
@@ -286,6 +286,58 @@ type T =
          ]
          
     [<Fact>]
+    let ``When Sealed and AbstractClass on a type with primary constructor, explicit, instance and abstract members lang version70`` () =
+        Fsx """
+[<Sealed; AbstractClass>]
+type T() =
+    abstract A : int
+    abstract B : int with get, set
+    abstract C : i:int -> int
+    abstract D : i:int -> int
+    default _.D i = i + 3
+    member _.E = 3
+    member _.H (i, j) = i + j
+    member _.Item with get i = 3 and set i value = ()
+    member val AutoProperty = 0 with get, set
+    override _.ToString () = "BBB"
+        """
+         |> withLangVersion70
+         |> compile
+         |> shouldSucceed
+         
+    [<Fact>]
+    let ``When Sealed and AbstractClass on a type with primary, additional constructors, explicit field, instance and abstract members in lang preview`` () =
+        Fsx """
+[<Sealed; AbstractClass>]
+type T() =
+    abstract A : int
+    abstract B : int with get, set
+    abstract C : i:int -> int
+    abstract D : i:int -> int
+    default _.D i = i + 3
+    member _.E = 3
+    member _.H (i, j) = i + j
+    member _.Item with get i = 3 and set i value = ()
+    member val AutoProperty = 0 with get, set
+    override _.ToString () = "BBB"
+        """
+         |> withLangVersionPreview
+         |> compile
+         |> shouldFail
+         |> withDiagnostics [
+             (Error 3551, Line 4, Col 5, Line 4, Col 21, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No abstract members is allowed")
+             (Error 3551, Line 5, Col 5, Line 5, Col 35, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No abstract members is allowed")
+             (Error 3551, Line 6, Col 5, Line 6, Col 30, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No abstract members is allowed")
+             (Error 3551, Line 7, Col 5, Line 7, Col 30, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No abstract members is allowed")
+             (Error 3551, Line 8, Col 5, Line 8, Col 26, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No instance members is allowed")
+             (Error 3551, Line 9, Col 5, Line 9, Col 19, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No instance members is allowed")
+             (Error 3551, Line 10, Col 5, Line 10, Col 30, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No instance members is allowed")
+             (Error 3551, Line 11, Col 5, Line 11, Col 54, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No instance members is allowed")
+             (Error 3551, Line 12, Col 5, Line 12, Col 32, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No only static member val definitions is allowed")
+             (Error 3551, Line 13, Col 5, Line 13, Col 35, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No instance members is allowed")
+         ]
+         
+    [<Fact>]
     let ``When Sealed and AbstractClass on a type with static members lang version70`` () =
         Fsx """
 [<Sealed; AbstractClass>]
@@ -316,6 +368,7 @@ type B() =
     static let x c = 1 + c
     static member Z = "Z"
     static member X  c = x c
+    static member val StaticAutoProperty = 0 with get, set
         """
          |> withLangVersion70
          |> compile
@@ -329,7 +382,139 @@ type B() =
     static let x c = 1 + c
     static member Z = "Z"
     static member X c = x c
+    static member val StaticAutoProperty = 0 with get, set
         """
          |> withLangVersionPreview
          |> compile
          |> shouldSucceed
+         
+    [<Fact>]
+    let ``When Sealed and AbstractClass on a type with non static let bindings and members lang version70`` () =
+        Fsx """
+[<Sealed; AbstractClass>]
+type B() =
+    let a  = 5
+    let x c = 1 + c
+    static member Z = "Z"
+        """
+         |> withLangVersion70
+         |> compile
+         |> shouldSucceed
+         
+    [<Fact>]
+    let ``When Sealed and AbstractClass on a type with non static let bindings and members in lang preview`` () =
+        Fsx """
+[<Sealed; AbstractClass>]
+type B() =
+    let a  = 5
+    let x c = 1 + c
+    static member Z = "Z"
+        """
+         |> withLangVersionPreview
+         |> compile
+         |> shouldFail
+         |> withDiagnostics [
+             (Error 3551, Line 4, Col 5, Line 4, Col 15, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No only static let bindings is allowed")
+             (Error 3551, Line 5, Col 5, Line 5, Col 20, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No only static let bindings is allowed")
+         ]
+         
+    [<Fact>]
+    let ``When Sealed and AbstractClass on a type with do bindings and members lang version70`` () =
+        Fsx """
+[<Sealed; AbstractClass>]
+type B() =
+    let mutable x  = 5
+    do x <- 5
+    static member Z = ""
+        """
+         |> withLangVersion70
+         |> compile
+         |> shouldSucceed
+         
+    [<Fact>]
+    let ``When Sealed and AbstractClass on a type with do bindings and members in lang preview`` () =
+        Fsx """
+[<Sealed; AbstractClass>]
+type B() =
+    let mutable x  = 5
+    do x <- 5
+    static member Z = ""
+        """
+         |> withLangVersionPreview
+         |> compile
+         |> shouldFail
+         |> withDiagnostics [
+             (Error 3551, Line 4, Col 5, Line 4, Col 23, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No only static let bindings is allowed")
+             (Error 3551, Line 5, Col 5, Line 5, Col 14, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No only static let bindings is allowed")
+         ]
+         
+    [<Fact>]
+    let ``When Sealed and AbstractClass on a type conforming an interface lang version70`` () =
+        Fsx """
+type I =
+    abstract DoNothing: unit -> unit
+    
+[<Sealed; AbstractClass>]
+type B =
+    interface I with 
+        member this.DoNothing() = ()
+        """
+         |> withLangVersion70
+         |> compile
+         |> shouldSucceed
+         
+    [<Fact>]
+    let ``When Sealed and AbstractClass on a type conforming an interface in lang preview`` () =
+        Fsx """
+type I =
+    abstract DoNothing: unit -> unit
+    
+[<Sealed; AbstractClass>]
+type B =
+    interface I with 
+        member this.DoNothing() = ()
+        """
+         |> withLangVersionPreview
+         |> compile
+         |> shouldFail
+         |> withDiagnostics [
+             (Error 3551, Line 7, Col 15, Line 7, Col 16, "if a type uses both [<Sealed>] and [<AbstractClass>] it means it is static. No inplement interfaces on static class is not allowed is allowed")
+         ]
+         
+         
+    [<Fact>]
+    let ``When Sealed and AbstractClass on a type and then used in a extension in lang version70`` () =
+        Fsx """
+[<Sealed ; AbstractClass>]
+type View = class end
+
+[<AutoOpen>]
+module ViewBuilder =
+    type View with
+        static member MyLabel(text: string) = ""
+        
+open type View
+let view() = MyLabel("Im a label")
+        """
+         |> withLangVersion70
+         |> compile
+         |> shouldSucceed
+         
+    [<Fact>]
+    let ```When Sealed and AbstractClass on a type and then used in a extension in lang preview`` () =
+        Fsx """
+[<Sealed ; AbstractClass>]
+type View = class end
+
+[<AutoOpen>]
+module ViewBuilder =
+    type View with
+        static member MyLabel(text: string) = ""
+        
+open type View
+let view() = MyLabel("Im a label")
+        """
+         |> withLangVersionPreview
+         |> compile
+         |> shouldSucceed
+         

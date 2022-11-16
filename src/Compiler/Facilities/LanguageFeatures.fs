@@ -55,6 +55,8 @@ type LanguageFeature =
     | InterfacesWithAbstractStaticMembers
     | SelfTypeConstraints
     | MatchNotAllowedForUnionCaseWithNoData
+    | CSharpExtensionAttributeNotRequired
+    | ErrorForNonVirtualMembersOverrides
     | ErrorOnSealedAndAbstractClass
 
 /// LanguageVersion management
@@ -127,6 +129,9 @@ type LanguageVersion(versionText) =
                 // F# preview
                 LanguageFeature.FromEndSlicing, previewVersion
                 LanguageFeature.MatchNotAllowedForUnionCaseWithNoData, previewVersion
+                LanguageFeature.CSharpExtensionAttributeNotRequired, previewVersion
+                LanguageFeature.ErrorForNonVirtualMembersOverrides, previewVersion
+
                 LanguageFeature.ErrorOnSealedAndAbstractClass, previewVersion
             ]
 
@@ -235,6 +240,8 @@ type LanguageVersion(versionText) =
         | LanguageFeature.InterfacesWithAbstractStaticMembers -> FSComp.SR.featureInterfacesWithAbstractStaticMembers ()
         | LanguageFeature.SelfTypeConstraints -> FSComp.SR.featureSelfTypeConstraints ()
         | LanguageFeature.MatchNotAllowedForUnionCaseWithNoData -> FSComp.SR.featureMatchNotAllowedForUnionCaseWithNoData ()
+        | LanguageFeature.CSharpExtensionAttributeNotRequired -> FSComp.SR.featureCSharpExtensionAttributeNotRequired  ()
+        | LanguageFeature.ErrorForNonVirtualMembersOverrides -> FSComp.SR.featureErrorForNonVirtualMembersOverrides  ()
         | LanguageFeature.ErrorOnSealedAndAbstractClass -> FSComp.SR.featureErrorSealedAndAbstractClassAttributes ()
 
     /// Get a version string associated with the given feature.

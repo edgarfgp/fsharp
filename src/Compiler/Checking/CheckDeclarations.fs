@@ -4032,7 +4032,7 @@ module TcDeclarations =
                     | SynMemberDefn.ImplicitInherit (ty, _, idOpt, m) -> Some(ty, m, idOpt)
                     | _ -> None)
             //let nestedTycons = cspec |> List.choose (function SynMemberDefn.NestedType (x, _, _) -> Some x | _ -> None)
-            let slotsigs = cspec |> List.choose (function SynMemberDefn.AbstractSlot (x, y, _) -> Some(x, y) | _ -> None)
+            let slotsigs = cspec |> List.choose (function SynMemberDefn.AbstractSlot (slotSig = x; flags = y) -> Some(x, y) | _ -> None)
             
             if reportErrorOnStaticClass then
                 for SynValSig(range=m), _ in slotsigs do

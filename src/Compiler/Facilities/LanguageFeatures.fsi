@@ -83,6 +83,7 @@ type LanguageFeature =
     | LowerSimpleMappingsInComprehensionsToFastLoops
     | ParsedHashDirectiveArgumentNonQuotes
     | EmptyBodiedComputationExpressions
+    | AllowObjectExpressionWithoutOverrides
 
 /// LanguageVersion management
 type LanguageVersion =

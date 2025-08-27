@@ -306,7 +306,22 @@ type DebugPointAtBinding =
 
 type SeqExprOnly = SeqExprOnly of bool
 
-type BlockSeparator = range * pos option
+type BlockSeparator =
+    | Semicolon of range: range * position: pos option
+    | Comma of range: range * position: pos option
+    | NewLine of range: range * position: pos option
+
+    member this.Range =
+        match this with
+        | Semicolon(range = m)
+        | Comma(range = m)
+        | NewLine(range = m) -> m
+
+    member this.Position =
+        match this with
+        | Semicolon(position = p)
+        | Comma(position = p)
+        | NewLine(position = p) -> p
 
 type RecordFieldName = SynLongIdent * bool
 

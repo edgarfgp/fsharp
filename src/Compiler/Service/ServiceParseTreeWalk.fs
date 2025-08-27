@@ -445,7 +445,7 @@ module SyntaxTraversal =
                 | SynExpr.AnonRecd(copyInfo = copyOpt; recordFields = fields) ->
                     [
                         match copyOpt with
-                        | Some(expr, (withRange, _)) ->
+                        | Some(expr, Semicolon(range = withRange)) ->
                             yield dive expr expr.Range traverseSynExpr
 
                             yield
@@ -498,7 +498,7 @@ module SyntaxTraversal =
                                         traverseSynExpr expr)
 
                             match sepOpt with
-                            | Some(sep, scPosOpt) ->
+                            | Some(Semicolon(sep, scPosOpt)) ->
                                 yield
                                     dive () sep (fun () ->
                                         // special case: caret is below 'inherit' + one or more fields are already defined
@@ -506,11 +506,11 @@ module SyntaxTraversal =
                                         // $
                                         // field1 = 5
                                         diveIntoSeparator inheritRange.StartColumn scPosOpt None)
-                            | None -> ()
+                            | _ -> ()
                         | _ -> ()
 
                         match copyOpt with
-                        | Some(expr, (withRange, _)) ->
+                        | Some(expr, Semicolon(range = withRange)) ->
                             yield dive expr expr.Range traverseSynExpr
 
                             yield
@@ -556,7 +556,7 @@ module SyntaxTraversal =
                             | None -> ()
 
                             match sepOpt with
-                            | Some(sep, scPosOpt) ->
+                            | Some(Semicolon(sep, scPosOpt)) ->
                                 yield
                                     dive () sep (fun () ->
                                         // special case: caret is between field bindings

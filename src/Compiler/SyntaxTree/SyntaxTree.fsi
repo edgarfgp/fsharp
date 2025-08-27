@@ -368,8 +368,7 @@ type BlockSeparator =
 
     // A separator consisting of a newline
     /// range is the range of the newline
-    /// position is the position of the newline (if available)
-    | NewLine of range: range * position: pos option
+    | NewLine of range: range
 
     member Range: range
 

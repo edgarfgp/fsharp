@@ -309,7 +309,7 @@ type SeqExprOnly = SeqExprOnly of bool
 type BlockSeparator =
     | Semicolon of range: range * position: pos option
     | Comma of range: range * position: pos option
-    | NewLine of range: range * position: pos option
+    | NewLine of range: range
 
     member this.Range =
         match this with
@@ -320,8 +320,8 @@ type BlockSeparator =
     member this.Position =
         match this with
         | Semicolon(position = p)
-        | Comma(position = p)
-        | NewLine(position = p) -> p
+        | Comma(position = p) -> p
+        | NewLine _ -> None
 
 type RecordFieldName = SynLongIdent * bool
 

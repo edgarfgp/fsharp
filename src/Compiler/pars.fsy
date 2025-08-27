@@ -5862,7 +5862,7 @@ opt_seps_block:
 
 seps_block:
   | OBLOCKSEP
-     { NewLine((rhs parseState 1), None) }
+     { NewLine((rhs parseState 1)) }
 
   | SEMICOLON
      { let m = (rhs parseState 1)
@@ -5873,11 +5873,6 @@ seps_block:
 
   | OBLOCKSEP SEMICOLON
      { Semicolon((rhs2 parseState 1 2), Some (rhs parseState 2).End) }
-
-opt_pairs_seps_block:
-  | pairs_seps_block_semicolon { Some $1 }
-  | pairs_seps_block_comma { Some $1 }
-  | /* EMPTY */ { None }
 
 /* Semicolon-only separators for name pattern pairs */
 pairs_seps_block_semicolon:
@@ -5892,7 +5887,7 @@ pairs_seps_block_semicolon:
      { Semicolon((rhs2 parseState 1 2), Some (rhs parseState 2).End) }
      
   | OBLOCKSEP
-     { NewLine((rhs parseState 1), None) }
+     { NewLine((rhs parseState 1)) }
 
 /* Comma-only separators for name pattern pairs */
 pairs_seps_block_comma:
@@ -5907,7 +5902,7 @@ pairs_seps_block_comma:
      { Comma((rhs2 parseState 1 2), Some (rhs parseState 2).End) }
      
   | OBLOCKSEP  /* Allow newlines with comma patterns */
-     { NewLine((rhs parseState 1), None) }
+     { NewLine((rhs parseState 1)) }
 
 /* End of separator rules */
 

@@ -270,3 +270,14 @@ val mkSynField:
         SynField
 
 val leadingKeywordIsAbstract: SynLeadingKeyword -> bool
+
+/// Helper to construct a NamePatPairField from an identifier and pattern
+val mkNamePatPairField:
+    id: Ident * equalsRange: range option * pat: SynPat * sep: BlockSeparator option -> NamePatPairField
+
+/// Helper to construct a NamePatPairField when a long ident is already available
+val mkNamePatPairFieldWithLid:
+    lid: SynLongIdent * equalsRange: range option * pat: SynPat * sep: BlockSeparator option -> NamePatPairField
+
+/// Helper to construct a NamePatPairField directly from the namePatPair tuple the grammar returns
+val mkNamePatPairFieldFromPair: pair: (Ident * range option * SynPat) * sep: BlockSeparator option -> NamePatPairField

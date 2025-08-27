@@ -737,6 +737,19 @@ let mkUnderscoreRecdField m =
 
 let mkRecdField (lidwd: SynLongIdent) = lidwd, true
 
+let mkNamePatPairFieldWithLid (lid: SynLongIdent, equalsRange: range option, pat: SynPat, sep: BlockSeparator option) =
+    let nameRange = lid.Range
+    let m = unionRanges nameRange pat.Range
+    NamePatPairField(lid, equalsRange, m, pat, sep)
+
+let mkNamePatPairField (id: Ident, equalsRange: range option, pat: SynPat, sep: BlockSeparator option) =
+    let lid = SynLongIdent([ id ], [], [ None ])
+    mkNamePatPairFieldWithLid (lid, equalsRange, pat, sep)
+
+let mkNamePatPairFieldFromPair (pair: Ident * range option * SynPat, sep: BlockSeparator option) =
+    let id, mEq, pat = pair
+    mkNamePatPairField (id, mEq, pat, sep)
+
 // Used for 'do expr' in a class.
 let mkSynDoBinding (vis: SynAccess option, mDo, expr, m) =
     match vis with

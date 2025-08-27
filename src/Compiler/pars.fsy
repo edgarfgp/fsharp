@@ -3660,60 +3660,39 @@ conjPatternElements:
 namePatPairs:
    /* Single pattern pair - no separator needed */
    | namePatPair
-     { let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       [ NamePatPairField(lid, mEq, m, pat, None) ] }
+     { [ mkNamePatPairFieldFromPair($1, None) ] }
    
    /* Comma-separated patterns - enforce comma consistency */
    | namePatPair pairs_seps_block_comma namePatPairsCommaRest
      { let mComma = match $2 with | Comma(m, _) -> m | _ -> rhs parseState 2
        parseState.LexBuffer.CheckLanguageFeatureAndRecover LanguageFeature.AllowCommaAsUnionCaseNamedFieldSeparator mComma
-       let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       NamePatPairField(lid, mEq, m, pat, Some $2) :: $3 }
+       mkNamePatPairFieldFromPair($1, Some $2) :: $3 }
 
    /* Semicolon-separated patterns - enforce semicolon consistency */  
    | namePatPair pairs_seps_block_semicolon namePatPairsSemiRest
-     { let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       NamePatPairField(lid, mEq, m, pat, Some $2) :: $3 }
+     { mkNamePatPairFieldFromPair($1, Some $2) :: $3 }
        
    /* Error handling: mixing separators - comma then semicolon */
    | namePatPair COMMA SEMICOLON
      { let mComma = rhs parseState 2
        parseState.LexBuffer.CheckLanguageFeatureAndRecover LanguageFeature.AllowCommaAsUnionCaseNamedFieldSeparator mComma
        reportParseErrorAt (rhs parseState 3) (FSComp.SR.parsInconsistentSeparators())
-       let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       [ NamePatPairField(lid, mEq, m, pat, Some (Comma(rhs parseState 2, Some (rhs parseState 2).End))) ] }
+       [ mkNamePatPairFieldFromPair($1, Some (Comma(rhs parseState 2, Some (rhs parseState 2).End))) ] }
        
    /* Error handling: mixing separators - semicolon then comma */
    | namePatPair SEMICOLON COMMA
      { reportParseErrorAt (rhs parseState 3) (FSComp.SR.parsInconsistentSeparators())
-       let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       [ NamePatPairField(lid, mEq, m, pat, Some (Semicolon(rhs parseState 2, Some (rhs parseState 2).End))) ] }
+       [ mkNamePatPairFieldFromPair($1, Some (Semicolon(rhs parseState 2, Some (rhs parseState 2).End))) ] }
 
 /* Continuation of comma-only separated name pattern pairs */
 namePatPairsCommaRest:
    | namePatPair
-     { let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       [ NamePatPairField(lid, mEq, m, pat, None) ] }
+     { [ mkNamePatPairFieldFromPair($1, None) ] }
 
    | namePatPair pairs_seps_block_comma namePatPairsCommaRest
      { let mComma = match $2 with | Comma(m, _) -> m | _ -> rhs parseState 2
        parseState.LexBuffer.CheckLanguageFeatureAndRecover LanguageFeature.AllowCommaAsUnionCaseNamedFieldSeparator mComma
-       let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       NamePatPairField(lid, mEq, m, pat, Some $2) :: $3 }
+       mkNamePatPairFieldFromPair($1, Some $2) :: $3 }
 
    /* Trailing underscore allowed */
    | UNDERSCORE
@@ -3722,35 +3701,23 @@ namePatPairsCommaRest:
    /* Error: semicolon after comma - with recovery to continue parsing */
    | namePatPair SEMICOLON namePatPairsSemiRest
      { reportParseErrorAt (rhs parseState 2) (FSComp.SR.parsInconsistentSeparators())
-       let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
        // Continue parsing the rest as semicolon-separated for error recovery
-       NamePatPairField(lid, mEq, m, pat, Some (Semicolon(rhs parseState 2, Some (rhs parseState 2).End))) :: $3 }
+       mkNamePatPairFieldFromPair($1, Some (Semicolon(rhs parseState 2, Some (rhs parseState 2).End))) :: $3 }
 
    /* Error handling: semicolon after comma in sequence */
    | namePatPair SEMICOLON
      { let mComma = rhs parseState 1
        parseState.LexBuffer.CheckLanguageFeatureAndRecover LanguageFeature.AllowCommaAsUnionCaseNamedFieldSeparator mComma  
        reportParseErrorAt (rhs parseState 2) (FSComp.SR.parsInconsistentSeparators())
-       let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       [ NamePatPairField(lid, mEq, m, pat, None) ] }
+       [ mkNamePatPairFieldFromPair($1, None) ] }
 
 /* Continuation of semicolon-only separated name pattern pairs */
 namePatPairsSemiRest:
    | namePatPair
-     { let (id: Ident), mEq1, (pat1: SynPat) = $1
-       let m1 = unionRanges id.idRange pat1.Range
-       let lid1 = SynLongIdent([id], [], [None])
-       [ NamePatPairField(lid1, mEq1, m1, pat1, None) ] }
+     { [ mkNamePatPairFieldFromPair($1, None) ] }
 
    | namePatPair pairs_seps_block_semicolon namePatPairsSemiRest
-     { let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       NamePatPairField(lid, mEq, m, pat, Some $2) :: $3 }
+     { mkNamePatPairFieldFromPair($1, Some $2) :: $3 }
 
    /* Trailing underscore allowed */
    | UNDERSCORE
@@ -3761,21 +3728,15 @@ namePatPairsSemiRest:
      { let mComma = rhs parseState 2
        parseState.LexBuffer.CheckLanguageFeatureAndRecover LanguageFeature.AllowCommaAsUnionCaseNamedFieldSeparator mComma
        reportParseErrorAt (rhs parseState 2) (FSComp.SR.parsInconsistentSeparators())
-       let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
        // Continue parsing the rest as comma-separated for error recovery
-       NamePatPairField(lid, mEq, m, pat, Some (Comma(mComma, Some mComma.End))) :: $3 }
+       mkNamePatPairFieldFromPair($1, Some (Comma(mComma, Some mComma.End))) :: $3 }
 
    /* Error handling: comma after semicolon in sequence */
    | namePatPair COMMA
      { let mComma = rhs parseState 2
        parseState.LexBuffer.CheckLanguageFeatureAndRecover LanguageFeature.AllowCommaAsUnionCaseNamedFieldSeparator mComma
        reportParseErrorAt (rhs parseState 2) (FSComp.SR.parsInconsistentSeparators())
-       let (id: Ident), mEq, (pat: SynPat) = $1
-       let m = unionRanges id.idRange pat.Range
-       let lid = SynLongIdent([id], [], [None])
-       [ NamePatPairField(lid, mEq, m, pat, None) ] }
+       [ mkNamePatPairFieldFromPair($1, None) ] }
 
 namePatPair:
    | ident EQUALS parenPattern

@@ -5874,35 +5874,41 @@ seps_block:
   | OBLOCKSEP SEMICOLON
      { Semicolon((rhs2 parseState 1 2), Some (rhs parseState 2).End) }
 
-/* Semicolon-only separators for name pattern pairs */
-pairs_seps_block_semicolon:
-  | SEMICOLON
-     { let m = (rhs parseState 1)
-       Semicolon(m, Some m.End) }
-       
-  | SEMICOLON OBLOCKSEP
-     { Semicolon((rhs2 parseState 1 2), Some (rhs parseState 1).End) }
-     
-  | OBLOCKSEP SEMICOLON
-     { Semicolon((rhs2 parseState 1 2), Some (rhs parseState 2).End) }
-     
+layout_sep:
   | OBLOCKSEP
      { NewLine((rhs parseState 1)) }
 
-/* Comma-only separators for name pattern pairs */
-pairs_seps_block_comma:
+semicolon_token:
+  | SEMICOLON
+     { let m = (rhs parseState 1)
+       Semicolon(m, Some m.End) }
+  | SEMICOLON OBLOCKSEP
+     { Semicolon((rhs2 parseState 1 2), Some (rhs parseState 1).End) }
+  | OBLOCKSEP SEMICOLON
+     { Semicolon((rhs2 parseState 1 2), Some (rhs parseState 2).End) }
+
+comma_token:
   | COMMA
      { let m = (rhs parseState 1)
        Comma(m, Some m.End) }
-       
   | COMMA OBLOCKSEP
      { Comma((rhs2 parseState 1 2), Some (rhs parseState 1).End) }
-     
   | OBLOCKSEP COMMA
      { Comma((rhs2 parseState 1 2), Some (rhs parseState 2).End) }
-     
-  | OBLOCKSEP  /* Allow newlines with comma patterns */
-     { NewLine((rhs parseState 1)) }
+
+/* Semicolon-only separators for name pattern pairs */
+pairs_seps_block_semicolon:
+  | semicolon_token
+     { $1 }
+  | layout_sep
+     { $1 }
+
+/* Comma-only separators for name pattern pairs */
+pairs_seps_block_comma:
+  | comma_token
+     { $1 }
+  | layout_sep  /* Allow newlines with comma patterns */
+     { $1 }
 
 /* End of separator rules */
 

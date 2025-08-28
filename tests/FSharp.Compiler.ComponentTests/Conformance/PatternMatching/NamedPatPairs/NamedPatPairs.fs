@@ -67,3 +67,23 @@ module NamedPatPairs =
         |> withDiagnostics [
             (Error 3879, Line 7, Col 25, Line 7, Col 26, "Inconsistent separators in pattern. Use either all commas or all semicolons, but not both.")
         ]
+
+    [<Theory; Directory(__SOURCE_DIRECTORY__, Includes=[|"E_NamedPatPairs02.fs"|])>]
+    let ``Version9 NamedPatPairs - E_NamedPatPairs02_fs`` compilation =
+        compilation
+        |> ignoreWarnings
+        |> withLangVersion90
+        |> typecheck
+        |> shouldFail
+        |> withDiagnostics [
+        ]
+
+    [<Theory; Directory(__SOURCE_DIRECTORY__, Includes=[|"E_NamedPatPairs02.fs"|])>]
+    let ``Preview: NamedPatPairs - E_NamedPatPairs02_fs`` compilation =
+        compilation
+        |> ignoreWarnings
+        |> withLangVersionPreview
+        |> typecheck
+        |> shouldFail
+        |> withDiagnostics [
+        ]
